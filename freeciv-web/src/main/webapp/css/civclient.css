@@ -108,7 +108,6 @@ button {
   padding: 5px;
   right: 0;
   top: 0;
-  z-index: 9000;
 }
 
 #turn_done_button {
@@ -168,6 +167,20 @@ button {
   background: #2e2f35;
   padding: 30px;
   overflow: auto;
+}
+
+.helptext {
+  white-space: pre-wrap;
+  font-size: 85%;
+}
+
+#manual_non_helptext_facts {
+  -moz-column-width: 20em;
+  -webkit-column-width: 20em;
+  column-width: 20em;
+  -moz-column-count: 2;
+  -webkit-column-count: 2;
+  column-count: 2;
 }
 
 #game_unit_orders_default {
