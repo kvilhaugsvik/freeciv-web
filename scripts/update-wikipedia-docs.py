@@ -3,11 +3,18 @@
 import wikipedia
 import json
 from subprocess import call
+from PIL import Image
+import requests
+from io import BytesIO
 
 freeciv_wiki_doc = {};
 
 def fix_tech(tech_name):
+  if (tech_name.startswith("?")):
+    tech_name = tech_name.partition(':')[2];
+
   if (tech_name == "Advanced Flight"): tech_name = "Aeronautics";
+  if (tech_name == "AWACS"): tech_name = "Boeing E-3 Sentry";
   if (tech_name == "Rocketry"): tech_name = "Rocket";
   if (tech_name == "Stealth"): tech_name = "Stealth technology";
   if (tech_name == "Tactics"): tech_name = "Military tactics";
@@ -39,27 +46,53 @@ def fix_tech(tech_name):
   if (tech_name == "Copernicus' Observatory"): tech_name = "Space observatory";
   if (tech_name == "Mech. Inf."): tech_name = "Mechanized infantry";
   if (tech_name == "Sun Tzu's War Academy"): tech_name = "Sun Tzu";
-  if (tech_name == "Mobile Warfare"): tech_name = "Mobile_Warfare";
+  if (tech_name == "Mobile Warfare"): tech_name = "Maneuver warfare";
   if (tech_name == "Leonardo's Workshop"): tech_name = "Leonardo da Vinci";
   if (tech_name == "SETI Program"): tech_name = "Search for extraterrestrial intelligence";
+  if (tech_name == "J.S. Bach's Cathedral"): tech_name = "Johann Sebastian Bach";
+  if (tech_name == "Mass Transit"): tech_name = "Public transport";
+  if (tech_name == "Spy"): tech_name = "Espionage";
+  if (tech_name == "Space Component"): tech_name = "Spacecraft propulsion";
+  if (tech_name == "Space Module"): tech_name = "Life support system";
+  if (tech_name == "Space Structural"): tech_name = "Spacecraft design";
   return tech_name;
 
 def validate_image(image_url):
   return ((".png" in image_url.lower() or ".jpg" in image_url.lower()) 
-		  and not "Ambox" in image_url and "Writing_systems_worldwide" not in image_url);
+		  and not "Ambox" in image_url 
+		  and not "Berthabenzportrait" in image_url 
+		  and not "Great_wall_of_china-mutianyu_3" in image_url 
+		  and not "Chevalier" in image_url 
+		  and not "Nuvola_apps_ksysv" in image_url 
+		  and not "mile_Levassor" in image_url 
+		  and not "Place_de_la_R" in image_url 
+		  and not "Elizabeth" in image_url 
+                  and "Writing_systems_worldwide" not in image_url);
 
 def download_wiki_page(tech_name):
+  image_width = 500;
+  max_height = 450;
+
   print(tech_name + " -> " + fix_tech(tech_name));
   page = wikipedia.page(fix_tech(tech_name), auto_suggest=True, redirect=True);
 
   image = None;
-  if (len(page.images) > 0 and validate_image(page.images[0])): image = page.images[0];
-  if (len(page.images) > 1 and validate_image(page.images[1])): image = page.images[1];
-  if (len(page.images) > 2 and validate_image(page.images[2])): image = page.images[2];
-  if (len(page.images) > 3 and validate_image(page.images[3])): image = page.images[3];
-  if (len(page.images) > 4 and validate_image(page.images[4])): image = page.images[4];
+  # FIXME: page.images seems to be in random order, so we'll get a random image from Wikipedia.
+  for i in range(len(page.images)):
+    if validate_image(page.images[i]): 
+      image = page.images[i];
+      break;
+
   if image != None:
-    image = image.replace("http:", "");  #protocol relative url
+    response = requests.get(image)
+    img = Image.open(BytesIO(response.content))
+    wpercent = (image_width/float(img.size[0]))
+    hsize = int((float(img.size[1])*float(wpercent)))
+    if (hsize > max_height):
+      hsize = max_height;
+    img = img.resize((image_width,hsize), Image.ANTIALIAS)
+    img.convert('RGB').save("../freeciv-web/src/main/webapp/images/wiki/" + page.title + ".jpg");
+    image = page.title + ".jpg";
 
   freeciv_wiki_doc[tech_name] = {"title" : page.title, "summary" : page.summary, "image" : image};
 
@@ -111,6 +144,8 @@ for tech in techs:
   download_wiki_page(tech);
 
 f = open('../freeciv-web/src/main/webapp/javascript/freeciv-wiki-doc.js' ,'w');
-f.write("var freeciv_wiki_docs = " + json.dumps(freeciv_wiki_doc) + ";");
+f.write("var freeciv_wiki_docs = "
+        + json.dumps(freeciv_wiki_doc, sort_keys=True, indent=2) + ";\n");
 f.close();
+print("Please verify manually that the images from Wikipedia are suited for the game and players of all ages.");
 print("Downloading tech summaries from Wikipedia complete!");
