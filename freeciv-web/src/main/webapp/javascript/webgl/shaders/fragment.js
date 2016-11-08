@@ -23,6 +23,8 @@
     precision highp float;
     #endif
 
+    varying vec3 vNormal;
+
     uniform sampler2D lake;
     uniform sampler2D coast;
     uniform sampler2D floor;
@@ -36,9 +38,11 @@
     uniform sampler2D plains;
     uniform sampler2D swamp;
     uniform sampler2D tundra;
+    uniform sampler2D beach;
 
 
-    uniform sampler2D map;
+    uniform sampler2D maptiles;
+    uniform sampler2D heightmap;
 
     uniform int mapWidth;
     uniform int mapHeight;
@@ -60,16 +64,17 @@
     float terrain_swamp = 120.0/255.0;
     float terrain_tundra = 130.0/255.0;
 
-
+    float heightmap_land = 10.0/255.0;
+    float heightmap_ocean = 0.0;
 
 
     void main(void)
     {
 
-        vec4 terrain_type = texture2D(map, vec2(vUv.x, vUv.y));
-
+        vec4 terrain_type = texture2D(maptiles, vec2(vUv.x, vUv.y));
         vec3 c;
 
+        /* Set pixel color based on tile type. */
         if (terrain_type.r + 0.02 > terrain_lake && terrain_type.r - 0.02 < terrain_lake) {
           vec4 Ca = texture2D(lake, vec2(vUv.x * 50.0, vUv.y * 50.0));
           c = Ca.rgb;
@@ -114,7 +119,27 @@
           c = Cb.rgb;
         }
 
-        gl_FragColor= vec4(c, 1.0);
+        /* Render beach based on heightmap. */
+        /*
+        FIXME: this does not work yet.
+        vec4 height_current = texture2D(heightmap, vec2(vUv.x, vUv.y));
+        vec4 height_north = texture2D(heightmap, vec2(vUv.x, vUv.y + 10.0));
+        vec4 height_south = texture2D(heightmap, vec2(vUv.x, vUv.y - 10.0));
+        vec4 height_west = texture2D(heightmap, vec2(vUv.x + 10.0, vUv.y));
+        vec4 height_east = texture2D(heightmap, vec2(vUv.x - 10.0, vUv.y));
+
+        if (height_current.r == heightmap_land && height_south.r == heightmap_ocean) {
+          vec4 Cb = texture2D(beach, vec2(vUv.x * 50.0, vUv.y * 50.0));
+          c = Cb.rgb;
+        }*/
+
+        vec3 light = vec3(0.8, 0.6, 0.7);
+        light = normalize(light);
+
+        float dProd = max(0.0, dot(vNormal, light));
+
+
+        gl_FragColor= vec4(c.r * dProd * 1.1, c.g * dProd * 1.1, c.b * dProd * 1.1, 1.0);
 
     }
 

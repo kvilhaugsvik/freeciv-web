@@ -973,9 +973,14 @@ function show_new_user_account_dialog()
 		});
 
   $("#dialog").dialog('open');
-  grecaptcha.render('captcha_element', {
+
+  if (grecaptcha != null) {
+    grecaptcha.render('captcha_element', {
           'sitekey' : '6LfpcgMTAAAAAPRAOqYy6ZUhuX6bOJ7-7-_1V0FL'
         });
+  } else {
+    swal("Captcha not available. This could be caused by a browser plugin.");
+  }
 
   $("#username").blur(function() {
    $.ajax({
@@ -984,6 +989,7 @@ function show_new_user_account_dialog()
      success: function(data, textStatus, request) {
         if (data != "user_does_not_exist") {
           $("#username_validation_result").html("The username is already taken. Please choose another username.");
+          $(".ui-dialog-buttonset button").button("disable");
         } else {
           $("#email").blur(function() {
           $.ajax({
@@ -992,8 +998,10 @@ function show_new_user_account_dialog()
             success: function(data, textStatus, request) {
                if (data == "invitation") {
                  $("#username_validation_result").html("");
+                 $(".ui-dialog-buttonset button").button("enable");
                } else {
                  $("#username_validation_result").html("The e-mail is already registered. Please choose another.");
+                 $(".ui-dialog-buttonset button").button("disable");
 
                }
              }
@@ -1010,7 +1018,6 @@ function show_new_user_account_dialog()
 **************************************************************************/
 function create_new_freeciv_user_account_request(action_type)
 {
-
   username = $("#username").val().trim().toLowerCase();
   var password = $("#password").val().trim();
   var confirm_password = $("#confirm_password").val().trim();
@@ -1036,6 +1043,9 @@ function create_new_freeciv_user_account_request(action_type)
     return false;
   } else if (username != cleaned_username) {
     $("#username_validation_result").html("Your name contains invalid characters, only the English alphabet is allowed.");
+    return false;
+  } else if (password.indexOf("%") != -1 || password.indexOf("#") != -1 || password.indexOf("&") != -1 || password.indexOf("?") != -1) {
+    $("#username_validation_result").html("Please don't use these characters in passwords: % # & ?");
     return false;
   } else if (password != confirm_password) {
     $("#username_validation_result").html("The passwords do not match.");
