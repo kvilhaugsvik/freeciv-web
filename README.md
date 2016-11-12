@@ -74,7 +74,6 @@ a directory on your computer, by running this git command:
  ```bash
   git clone https://github.com/freeciv/freeciv-web.git --depth=10
  ```
-
 4. Run Vagrant with the following commands in your Freeciv-web directory from step 3:
  ```bash
  vagrant plugin install vagrant-vbguest

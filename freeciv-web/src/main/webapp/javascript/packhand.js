@@ -85,6 +85,8 @@ function handle_server_join_reply(packet)
     }
 
     if (autostart) {
+      /*FIXME: WebGL renderer currently depends on map being revealed. */
+      if (renderer == RENDERER_WEBGL) send_message_delayed("/set revealmap start", 100);
       if (loadTimerId == -1) {
         setTimeout(pregame_start_game, 800);
       } else {
@@ -956,7 +958,9 @@ function recreate_old_tech_req(packet)
   for (i = 0; i < packet['research_reqs'].length; i++) {
     var requirement = packet['research_reqs'][i];
 
-    if (requirement.kind == VUT_ADVANCE) {
+    if (requirement.kind == VUT_ADVANCE
+        && requirement.range == REQ_RANGE_PLAYER
+        && requirement.present) {
       packet['req'].push(requirement.value);
     }
   }
