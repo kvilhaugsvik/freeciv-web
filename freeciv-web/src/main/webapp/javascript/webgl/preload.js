@@ -25,6 +25,7 @@ var webgl_models = {};
 ****************************************************************************/
 function webgl_preload()
 {
+  $.blockUI({ message: "<h2>Downloading textures and models...</h2>" });
   var loadingManager = new THREE.LoadingManager();
   loadingManager.onLoad = function () {
     webgl_preload_models();
@@ -72,10 +73,9 @@ function webgl_preload_models()
       dae = collada.scene;
       dae.updateMatrix();
       dae.scale.x = dae.scale.y = dae.scale.z = 11;
-      dae.translateOnAxis(new THREE.Vector3(0,1,0).normalize(), 100);
-      dae.translateOnAxis(new THREE.Vector3(0,0,1).normalize(), 1000);
       webgl_models["settler"] = dae;
-      setTimeout(render_testmap, 500);
+      webgl_preload_complete();
+      $.unblockUI();
   });
 
 }

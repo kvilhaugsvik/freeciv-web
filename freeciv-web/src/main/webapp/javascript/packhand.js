@@ -86,9 +86,12 @@ function handle_server_join_reply(packet)
 
     if (autostart) {
       /*FIXME: WebGL renderer currently depends on map being revealed. */
-      if (renderer == RENDERER_WEBGL) send_message_delayed("/set revealmap start", 100);
+      if (renderer == RENDERER_WEBGL) {
+        send_message_delayed("/set revealmap start", 100);
+        $.blockUI({ message: '<h2>Generating terrain map model...</h2>' });
+      }
       if (loadTimerId == -1) {
-        setTimeout(pregame_start_game, 2000);
+        setTimeout(pregame_start_game, 600);
       } else {
         setTimeout(pregame_start_game, 3800);
       }
@@ -583,6 +586,7 @@ function handle_unit_packet_common(packet_unit)
      * by simply deleting the old one and creating a new one. */
     handle_unit_remove(packet_unit['id']);
   }
+  if (punit != null && renderer == RENDERER_WEBGL) update_unit_position(index_to_tile(punit['tile']));
 
   if (units[packet_unit['id']] == null) {
     /* This is a new unit. */
@@ -602,6 +606,9 @@ function handle_unit_packet_common(packet_unit)
 
   update_tile_unit(units[packet_unit['id']]);
 
+  if (renderer == RENDERER_WEBGL) {
+    update_unit_position(index_to_tile(units[packet_unit['id']]['tile']));
+  }
 
   if (current_focus.length > 0 && current_focus[0]['id'] == packet_unit['id']) {
     update_active_units_dialog();
