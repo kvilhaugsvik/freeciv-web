@@ -17,40 +17,48 @@
 
 ***********************************************************************/
 
-var unit_positions = {};  // tile index is key, unit 3d model is value.
 
 /****************************************************************************
-...
+  Converts from map to scene coordinates.
 ****************************************************************************/
-function update_unit_position(ptile) {
-  var visible_unit = find_visible_unit(ptile);
-
-  if (unit_positions[ptile['index']] != null && visible_unit == null) {
-    // tile has no visible units, remove it from unit_positions.
-    delete unit_positions[ptile['index']];
-  }
-
-  if (unit_positions[ptile['index']] == null && visible_unit != null) {
-    // add new unit to the unit_positions
-    var new_unit = webgl_models["settler"].clone()
-    unit_positions[ptile['index']] = new_unit;
-    //ptile['x']
-    var pos = map_to_scene_coords(ptile['x'], ptile['y']);
-    new_unit.position = new THREE.Vector3(pos['x'], 100, pos['y']);
-    //new_unit.translateOnAxis(new THREE.Vector3(0,1,0).normalize(), 100);
-    //new_unit.translateOnAxis(new THREE.Vector3(0,0,1).normalize(), 1000);
-  }
-
+function map_to_scene_coords(x, y)
+{
+  var result = {};
+  result['x'] = Math.floor(-470 + x * 3000 / map['xsize']);
+  result['y'] = Math.floor(30 + y * 2000 / map['ysize']);
+  return result;
 }
 
 /****************************************************************************
-...
+  Converts from scene to map coordinates.
 ****************************************************************************/
-function add_all_units_to_scene()
+function scene_to_map_coords(x, y)
 {
-  for (var tile_index in unit_positions) {
-    var punit = unit_positions[tile_index];
-    scene.add(punit);
-  }
+  var result = {};
+  result['x'] = Math.floor((x + 470) * map['xsize'] / 3000);
+  result['y'] = Math.floor((y - 30) * map['ysize'] / 2000);
+  return result;
+}
 
+
+/****************************************************************************
+  Converts from map canvas coordinates to a tile.
+****************************************************************************/
+function webgl_canvas_pos_to_tile(x, y) {
+
+  mouse.set( ( x / window.innerWidth ) * 2 - 1, - ( y / window.innerHeight ) * 2 + 1 );
+
+  raycaster.setFromCamera( mouse, camera );
+
+  var intersects = raycaster.intersectObjects( scene.children );
+
+  if ( intersects.length > 0 ) {
+    var intersect = intersects[ 0 ];
+    var pos = scene_to_map_coords(intersect.point.x, intersect.point.z)
+    console.log(pos);
+    var ptile = map_pos_to_tile(pos['x'], pos['y']);
+    return ptile;
+  } else {
+    return null;
+  }
 }

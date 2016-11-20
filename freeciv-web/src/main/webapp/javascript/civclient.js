@@ -123,6 +123,16 @@ function civclient_init()
 
   $('#tabs').tabs({ heightStyle: "fill" });
   $('#tabs').css("height", $(window).height());
+  $("#tabs-map").height("auto");
+  $("#tabs-civ").height("auto");
+  $("#tabs-tec").height("auto");
+  $("#tabs-nat").height("auto");
+  $("#tabs-cities").height("auto");
+  $("#tabs-opt").height("auto");
+  $("#tabs-hel").height("auto");
+
+
+
   $(".button").button();
 
   /* Initialze audio.js music player */
@@ -555,6 +565,10 @@ function show_debug_info()
     if (debug_client_speed_list[j] > max) max = debug_client_speed_list[j];
   }
   console.log("Network PING average (client): " + (sum / debug_client_speed_list.length) + " ms.  (Max: " + max +"ms.)");
+
+  if (renderer == RENDERER_WEBGL) {
+    console.log(maprenderer.info);
+  }
 
 }
 

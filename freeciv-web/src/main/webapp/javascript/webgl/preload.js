@@ -20,6 +20,10 @@
 var webgl_textures = {};
 var webgl_models = {};
 
+var load_count = 0;
+var model_files = ["Settlers", "Workers", "Explorer", "city_1"];
+var total_model_count = model_files.length;
+
 /****************************************************************************
   Preload textures and models
 ****************************************************************************/
@@ -61,21 +65,33 @@ function webgl_preload()
   }
 
 }
+
 /****************************************************************************
-  Preload models.
+  Preload all models.
 ****************************************************************************/
 function webgl_preload_models()
 {
-  /* Load a settler model. This is a Collada file which has been exported from Blender. */
-  var colladaloader = new THREE.ColladaLoader();
-  colladaloader.options.convertUpAxis = true;
-  colladaloader.load( '/3d-models/settler3.dae', function ( collada ) {
-      dae = collada.scene;
-      dae.updateMatrix();
-      dae.scale.x = dae.scale.y = dae.scale.z = 11;
-      webgl_models["settler"] = dae;
-      webgl_preload_complete();
-      $.unblockUI();
-  });
+
+  for (var i = 0; i < total_model_count; i++) {
+    load_model(model_files[i]);
+  }
+
+}
+
+/****************************************************************************
+ Loads a single model file.
+****************************************************************************/
+function load_model(filename)
+{
+   var colladaloader = new THREE.ColladaLoader();
+    colladaloader.options.convertUpAxis = true;
+    colladaloader.load( '/3d-models/' + filename + '.dae', function ( collada ) {
+        dae = collada.scene;
+        dae.updateMatrix();
+        dae.scale.x = dae.scale.y = dae.scale.z = 11;
+        webgl_models[filename] = dae;
+        load_count++;
+        if (load_count == total_model_count) webgl_preload_complete();
+    });
 
 }

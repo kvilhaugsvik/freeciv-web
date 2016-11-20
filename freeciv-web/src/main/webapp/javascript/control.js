@@ -131,11 +131,11 @@ function control_init()
   document.oncontextmenu = function(){return allow_right_click;};
 
   $.contextMenu({
-        selector: '#canvas',
-	zIndex: 5000,
+        selector: (renderer == RENDERER_2DCANVAS) ? '#canvas' : '#canvas_div' ,
+	    zIndex: 5000,
         autoHide: true,
         callback: function(key, options) {
-	  handle_context_menu_callback(key);
+          handle_context_menu_callback(key);
         },
         build: function($trigger, e) {
             if (!context_menu_active) {
@@ -814,6 +814,7 @@ function auto_center_on_focus_unit()
 
   if (ptile != null && auto_center_on_unit) {
     center_tile_mapcanvas(ptile);
+    update_unit_position(ptile);
   }
 }
 
@@ -1564,7 +1565,7 @@ function activate_goto_last(last_order, last_action)
 function deactivate_goto()
 {
   goto_active = false;
-  mapview_canvas.style.cursor = "default";
+  if (mapview_canvas != null) mapview_canvas.style.cursor = "default";
   goto_request_map = {};
   goto_turns_request_map = {};
   clear_goto_tiles();
@@ -2188,3 +2189,17 @@ function update_goto_path(goto_packet)
   update_mouse_cursor();
 }
 
+
+
+/**************************************************************************
+  Centers the mapview around the given tile..
+**************************************************************************/
+function center_tile_mapcanvas(ptile)
+{
+  if (renderer == RENDERER_2DCANVAS) {
+    center_tile_mapcanvas_2d(ptile);
+  } else {
+    center_tile_mapcanvas_3d(ptile);
+  }
+
+}

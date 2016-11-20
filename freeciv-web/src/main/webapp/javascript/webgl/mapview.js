@@ -25,6 +25,7 @@ var mouse, raycaster, isShiftDown = false;
 
 var rollOverMesh, rollOverMaterial;
 var cubeGeo, cubeMaterial;
+var directionalLight;
 
 var objects = [];
 var vertShader;
@@ -44,43 +45,8 @@ function webgl_start_renderer()
   container = document.getElementById('canvas_div');
 
   camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 1, 10000 );
-  camera_look_at(1000, 0, 1000);
 
   scene = new THREE.Scene();
-
-  // roll-over helpers
-
-  rollOverGeo = new THREE.BoxGeometry( 50, 50, 50 );
-  rollOverMaterial = new THREE.MeshBasicMaterial( { color: 0xff0000, opacity: 0.5, transparent: true } );
-  rollOverMesh = new THREE.Mesh( rollOverGeo, rollOverMaterial );
-  scene.add( rollOverMesh );
-
-    // cubes
-
-  cubeGeo = new THREE.BoxGeometry( 50, 50, 50 );
-  cubeMaterial = new THREE.MeshLambertMaterial( { color: 0xfeb74c, map: new THREE.TextureLoader().load( "/textures/square-outline-textured.png" ) } );
-
-  // grid
-
-  var step = 50;
-  var size = step * (map['xsize'] / 2);
-
-  var geometry = new THREE.Geometry();
-
-  for ( var i = 0; i <= size; i += step ) {
-
-    geometry.vertices.push( new THREE.Vector3( 0, 0, i ) );
-    geometry.vertices.push( new THREE.Vector3(   size, 0, i ) );
-
-    geometry.vertices.push( new THREE.Vector3( i, 0, 0 ) );
-    geometry.vertices.push( new THREE.Vector3( i, 0,   size ) );
-
-  }
-
-  var material = new THREE.LineBasicMaterial( { color: 0x000000, opacity: 0.2, transparent: true } );
-
-  var line = new THREE.LineSegments( geometry, material );
-  scene.add( line );
 
   raycaster = new THREE.Raycaster();
   mouse = new THREE.Vector2();
@@ -95,10 +61,10 @@ function webgl_start_renderer()
 
   // Lights
 
-  var ambientLight = new THREE.AmbientLight( 0x606060 );
+  var ambientLight = new THREE.AmbientLight( 0x606060, 1.0 );
   scene.add( ambientLight );
 
-  var directionalLight = new THREE.DirectionalLight( 0xffffff );
+  directionalLight = new THREE.DirectionalLight( 0xffffff, 2.5 );
   directionalLight.position.set( 1, 0.75, 0.5 ).normalize();
   scene.add( directionalLight );
 
@@ -111,14 +77,14 @@ function webgl_start_renderer()
   if (location.hostname === "localhost") {
     stats = new Stats();
     container.appendChild( stats.dom );
+
+    console.log("MAX_FRAGMENT_UNIFORM_VECTORS:" + maprenderer.context.getParameter(maprenderer.context.MAX_FRAGMENT_UNIFORM_VECTORS));
   }
 
   init_webgl_mapctrl();
   animate();
 
 }
-
-
 
 
 /****************************************************************************
@@ -219,16 +185,4 @@ function animate() {
   if (stats != null) stats.end();
   requestAnimationFrame( animate );
 
-}
-
-
-/****************************************************************************
-  FIXME: Incorrect. This needs to be fixed!
-****************************************************************************/
-function map_to_scene_coords(x, y)
-{
-  var result = {};
-  result['x'] = Math.floor(-446 + x * 3000 / map['xsize']);
-  result['y'] = Math.floor(50 + y * 1920 / map['ysize']);
-  return result;
 }

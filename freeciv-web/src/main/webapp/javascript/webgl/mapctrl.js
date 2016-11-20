@@ -24,10 +24,14 @@
 function init_webgl_mapctrl()
 {
   document.addEventListener('mousemove', webglOnDocumentMouseMove, false );
-  document.addEventListener('mousedown', webglOnDocumentMouseDown, false );
   document.addEventListener('keydown', webglOnDocumentKeyDown, false );
   document.addEventListener('keyup', webglOnDocumentKeyUp, false );
   window.addEventListener('resize', webglOnWindowResize, false );
+
+  $("#canvas_div").mousedown(webglOnDocumentMouseDown);
+  $("#canvas_div").mouseup(webglOnDocumentMouseUp);
+  $('#canvas_div').bind('mousewheel', webglOnMouseWheel);
+
 }
 
 
@@ -59,31 +63,86 @@ function webglOnDocumentMouseMove( event ) {
 
     var intersect = intersects[ 0 ];
 
-    rollOverMesh.position.copy( intersect.point ).add( intersect.face.normal );
-    rollOverMesh.position.divideScalar( 50 ).floor().multiplyScalar( 50 ).addScalar( 25 );
-
   }
 
 }
 
 /****************************************************************************
-...
+Triggered when the mouse button is clicked UP on the mapview canvas.
 ****************************************************************************/
-function webglOnDocumentMouseDown( event ) {
+function webglOnDocumentMouseUp( e ) {
 
-  event.preventDefault();
+  var rightclick = false;
+  var middleclick = false;
 
-  mouse.set( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
+  if (!e) var e = window.event;
+  if (e.which) {
+    rightclick = (e.which == 3);
+    middleclick = (e.which == 2);
+  } else if (e.button) {
+    rightclick = (e.button == 2);
+    middleclick = (e.button == 1 || e.button == 4);
+  }
+  if (rightclick) {
+    /* right click to recenter. */
+    if (!map_select_active || !map_select_setting_enabled) {
+      context_menu_active = true;
+      //recenter_button_pressed(mouse_x, mouse_y);
+    } else {
+      context_menu_active = false;
+      //map_select_units(mouse_x, mouse_y);
+    }
+    map_select_active = false;
+    map_select_check = false;
 
-  raycaster.setFromCamera( mouse, camera );
+  } else if (!rightclick && !middleclick) {
+    /* Left mouse button*/
+    action_button_pressed(mouse_x, mouse_y, SELECT_POPUP);
+  }
 
-  var intersects = raycaster.intersectObjects( scene.children );
+  e.preventDefault();
 
-  if ( intersects.length > 0 ) {
+  var ptile = webgl_canvas_pos_to_tile(e.clientX, e.clientY);
 
-    var intersect = intersects[ 0 ];
-    camera_look_at(intersect.point.x, 0, intersect.point.z);
-    //console.log("X: " + intersect.point.x + ", Y: " + intersect.point.z);
+  if (ptile != null) {
+    center_tile_mapcanvas_3d(ptile);
+  }
+
+}
+
+/****************************************************************************
+  Triggered when the mouse button is clicked DOWN on the mapview canvas.
+****************************************************************************/
+function webglOnDocumentMouseDown(e) {
+  var rightclick = false;
+  var middleclick = false;
+
+  if (!e) var e = window.event;
+  if (e.which) {
+    rightclick = (e.which == 3);
+    middleclick = (e.which == 2);
+  } else if (e.button) {
+    rightclick = (e.button == 2);
+    middleclick = (e.button == 1 || e.button == 4);
+  }
+
+  if (!rightclick && !middleclick) {
+    /* Left mouse button is down */
+    if (goto_active) return;
+
+    //setTimeout("check_mouse_drag_unit(" + mouse_x + "," + mouse_y + ");", 200);
+  } else if (middleclick || e['altKey']) {
+    popit();
+    return false;
+  } else if (rightclick && !map_select_active && is_right_mouse_selection_supported()) {
+    /*map_select_check = true;
+    map_select_x = mouse_x;
+    map_select_y = mouse_y;
+    map_select_check_started = new Date().getTime();*/
+
+    /* The context menu blocks the right click mouse up event on some
+     * browsers. */
+    context_menu_active = false;
   }
 
 }
@@ -111,4 +170,35 @@ function webglOnDocumentKeyUp( event ) {
 
 }
 
+/****************************************************************************
+  Mouse wheel scrolling for map zoom in and zoom out.
+****************************************************************************/
+function webglOnMouseWheel(e) {
+  var new_camera_dx;
+  var new_camera_dy;
+  var new_camera_dz;
+
+  if(e.originalEvent.wheelDelta /120 > 0) {
+    // zoom in
+    new_camera_dy = camera_dy - 60;
+    new_camera_dx = camera_dx - 15;
+    new_camera_dz = camera_dz - 15;
+  } else{
+    // zoom out
+    new_camera_dy = camera_dy + 60;
+    new_camera_dx = camera_dx + 15;
+    new_camera_dz = camera_dz + 15;
+  }
+
+  if (new_camera_dy < 220 || new_camera_dy > 2000) {
+    return;
+  } else {
+    camera_dx = new_camera_dx;
+    camera_dy = new_camera_dy;
+    camera_dz = new_camera_dz;
+  }
+
+  camera_look_at(camera_currect_x, camera_currect_y, camera_currect_z);
+
+}
 
