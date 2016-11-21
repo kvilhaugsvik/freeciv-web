@@ -32,7 +32,7 @@ function update_unit_position(ptile) {
   if (renderer != RENDERER_WEBGL) return;
 
   var visible_unit = find_visible_unit(ptile);
-  var height = 78 + map_tile_height(ptile) * 60;
+  var height = 5 + ptile['height'] * 100;
 
   if (unit_positions[ptile['index']] != null && visible_unit == null) {
     // tile has no visible units, remove it from unit_positions.
@@ -60,9 +60,9 @@ function update_unit_position(ptile) {
     if (scene != null && new_unit != null) {
       scene.add(new_unit);
     }
-
-    if (meshes['flag'] != null && unit_flag_positions[ptile['index']] == null) {
-      var new_flag = meshes['flag'].clone()
+    var pflag = get_unit_nation_flag_normal_sprite(visible_unit);
+    if (meshes[pflag['key']] != null && unit_flag_positions[ptile['index']] == null) {
+      var new_flag = meshes[pflag['key']].clone()
       unit_flag_positions[ptile['index']] = new_flag;
       var fpos = map_to_scene_coords(ptile['x'], ptile['y']);
       new_flag.translateOnAxis(new THREE.Vector3(1,0,0).normalize(), pos['x'] - 10);
@@ -109,7 +109,7 @@ function update_city_position(ptile) {
 
   var pcity = tile_city(ptile);
 
-  var height = 74 + map_tile_height(ptile) * 60;
+  var height = 5 + ptile['height'] * 100;
 
   if (city_positions[ptile['index']] != null && pcity == null) {
     // tile has no visible units, remove it from unit_positions.
@@ -135,9 +135,9 @@ function update_city_position(ptile) {
     if (scene != null && new_city != null) {
       scene.add(new_city);
     }
-
-    if (meshes['flag'] != null) {
-      var new_flag = meshes['flag'].clone()
+    var cflag = get_city_flag_sprite(pcity);
+    if (cflag != null && meshes[cflag['key']] != null) {
+      var new_flag = meshes[cflag['key']].clone()
       city_flag_positions[ptile['index']] = new_flag;
       var fpos = map_to_scene_coords(ptile['x'], ptile['y']);
       new_flag.translateOnAxis(new THREE.Vector3(1,0,0).normalize(), pos['x'] - 5);
