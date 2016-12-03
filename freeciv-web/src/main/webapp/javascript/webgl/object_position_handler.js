@@ -27,6 +27,10 @@ var unit_flag_positions = {};
 var unit_label_positions = {};
 var unit_activities_positions = {};
 
+var tile_extra_positions = {};
+
+var selected_unit_indicator = null;
+
 /****************************************************************************
   Handles unit positions
 ****************************************************************************/
@@ -53,7 +57,7 @@ function update_unit_position(ptile) {
     // add new unit to the unit_positions
     var unit_type_name = unit_type(visible_unit)['name'];
     if (unit_type_name == null || webgl_models[unit_type_name] == null) {
-      console.log(unit_type_name + " model not loaded correcly.");
+      console.error(unit_type_name + " model not loaded correcly.");
       return;
     }
 
@@ -68,6 +72,7 @@ function update_unit_position(ptile) {
     if (scene != null && new_unit != null) {
       scene.add(new_unit);
     }
+    /* add flag. */
     var pflag = get_unit_nation_flag_normal_sprite(visible_unit);
     if (meshes[pflag['key']] != null && unit_flag_positions[ptile['index']] == null) {
       var new_flag = meshes[pflag['key']].clone();
@@ -80,6 +85,22 @@ function update_unit_position(ptile) {
       if (scene != null && new_flag != null) {
         scene.add(new_flag);
       }
+    }
+    /* indicate focus unit*/
+    var funit = get_focus_unit_on_tile(ptile);
+    if (scene != null && funit != null && funit['id'] == visible_unit['id']) {
+      if (selected_unit_indicator != null) {
+        scene.remove(selected_unit_indicator);
+        selected_unit_indicator = null;
+      }
+      var material = new THREE.MeshBasicMaterial( { color: 0xfeffc5, transparent: true, opacity: 0.5} );
+      var selected_mesh = new THREE.Mesh( new THREE.RingGeometry( 18, 25, 24), material );
+      selected_mesh.translateOnAxis(new THREE.Vector3(1,0,0).normalize(), pos['x']);
+      selected_mesh.translateOnAxis(new THREE.Vector3(0,1,0).normalize(), height + 11);
+      selected_mesh.translateOnAxis(new THREE.Vector3(0,0,1).normalize(), pos['y']);
+      selected_mesh.rotation.x = -1 * Math.PI / 2;
+      scene.add(selected_mesh);
+      selected_unit_indicator = selected_mesh;
     }
   }
 
@@ -105,13 +126,31 @@ function update_unit_position(ptile) {
       unit_activities_positions[ptile['index']] = get_unit_activity_text(visible_unit);
     }
 
+    /* indicate focus unit*/
+    var funit = get_focus_unit_on_tile(ptile);
+    if (scene != null && funit != null && funit['id'] == visible_unit['id']) {
+      if (selected_unit_indicator != null) {
+        scene.remove(selected_unit_indicator);
+        selected_unit_indicator = null;
+      }
+      var material = new THREE.MeshBasicMaterial( { color: 0xfeffc5, transparent: true, opacity: 0.45} );
+      var selected_mesh = new THREE.Mesh( new THREE.RingGeometry( 18, 24, 20), material );
+      selected_mesh.translateOnAxis(new THREE.Vector3(1,0,0).normalize(), pos['x']);
+      selected_mesh.translateOnAxis(new THREE.Vector3(0,1,0).normalize(), height + 11);
+      selected_mesh.translateOnAxis(new THREE.Vector3(0,0,1).normalize(), pos['y']);
+      selected_mesh.rotation.x = -1 * Math.PI / 2;
+      scene.add(selected_mesh);
+      selected_unit_indicator = selected_mesh;
+    }
+
+    // no need up update unit model, since the model is unchanged.
     if (unit_positions[ptile['index']]['unit_type'] == unit_type_name) return;
 
     if (scene != null) scene.remove(unit_positions[ptile['index']]);
     delete unit_positions[ptile['index']];
 
     if (unit_type_name == null || webgl_models[unit_type_name] == null) {
-      console.log(unit_type_name + " model not loaded correcly.");
+      console.error(unit_type_name + " model not loaded correcly.");
       return;
     }
 
@@ -148,7 +187,7 @@ function update_city_position(ptile) {
   if (city_positions[ptile['index']] == null && pcity != null) {
     // add new city
     if (webgl_models['city_1'] == null) {
-      console.log("City model not loaded correcly.");
+      console.error("City model not loaded correcly.");
       return;
     }
 
@@ -189,6 +228,49 @@ function update_city_position(ptile) {
     // Update of visible city. TODO.
 
   }
+
+}
+
+
+/****************************************************************************
+  Handles tile extras, such as specials, irrigation.
+****************************************************************************/
+function update_tile_extras(ptile) {
+
+  if (tile_extra_positions[ptile['index']] == null) {
+    var height = 5 + ptile['height'] * 100;
+
+    if (tile_has_extra(ptile, EXTRA_IRRIGATION)) {
+      var irrigation = webgl_models["Irrigation"].clone()
+      tile_extra_positions[ptile['index']] = irrigation;
+
+      var pos = map_to_scene_coords(ptile['x'], ptile['y']);
+      irrigation.translateOnAxis(new THREE.Vector3(1,0,0).normalize(), pos['x']);
+      irrigation.translateOnAxis(new THREE.Vector3(0,1,0).normalize(), height + 3);
+      irrigation.translateOnAxis(new THREE.Vector3(0,0,1).normalize(), pos['y']);
+
+      if (scene != null && irrigation != null) {
+        scene.add(irrigation);
+      }
+    }
+
+    /* TODO: This is a temporary road solution. */
+    if (tile_has_extra(ptile, ROAD_ROAD)) {
+      var road = webgl_models["Road"].clone()
+      tile_extra_positions[ptile['index']] = road;
+
+      var pos = map_to_scene_coords(ptile['x'], ptile['y']);
+      road.translateOnAxis(new THREE.Vector3(1,0,0).normalize(), pos['x']);
+      road.translateOnAxis(new THREE.Vector3(0,1,0).normalize(), height + 3);
+      road.translateOnAxis(new THREE.Vector3(0,0,1).normalize(), pos['y']);
+
+      if (scene != null && road != null) {
+        scene.add(road);
+      }
+    }
+
+  }
+
 
 }
 
