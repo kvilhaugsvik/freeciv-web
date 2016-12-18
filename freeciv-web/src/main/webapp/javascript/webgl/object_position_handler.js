@@ -21,6 +21,7 @@
 var unit_positions = {};
 // stores city positions on the map. tile index is key, unit 3d model is value.
 var city_positions = {};
+var city_label_positions = {};
 // stores flag positions on the map. tile index is key, unit 3d model is value.
 var unit_flag_positions = {};
 var unit_label_positions = {};
@@ -31,6 +32,8 @@ var jungle_positions = {}; // tile index is key, boolean is value.
 
 // stores tile extras (eg specials), key is extra + "." + tile_index.
 var tile_extra_positions = {};
+
+var road_positions = {};
 
 var selected_unit_indicator = null;
 
@@ -83,7 +86,7 @@ function update_unit_position(ptile) {
       unit_flag_positions[ptile['index']] = new_flag;
       var fpos = map_to_scene_coords(ptile['x'], ptile['y']);
       new_flag.translateOnAxis(new THREE.Vector3(1,0,0).normalize(), pos['x'] - 10);
-      new_flag.translateOnAxis(new THREE.Vector3(0,1,0).normalize(), height + 14);
+      new_flag.translateOnAxis(new THREE.Vector3(0,1,0).normalize(), height + 16);
       new_flag.translateOnAxis(new THREE.Vector3(0,0,1).normalize(), pos['y'] - 10);
       new_flag.rotation.y = Math.PI / 4;
       if (scene != null && new_flag != null) {
@@ -184,9 +187,11 @@ function update_city_position(ptile) {
   var height = 5 + ptile['height'] * 100;
 
   if (city_positions[ptile['index']] != null && pcity == null) {
-    // tile has no visible units, remove it from unit_positions.
+    // tile has no city, remove it from unit_positions.
     if (scene != null) scene.remove(city_positions[ptile['index']]);
     delete city_positions[ptile['index']];
+    if (scene != null) scene.remove(city_label_positions[ptile['index']]);
+    delete city_label_positions[ptile['index']];
   }
 
   if (city_positions[ptile['index']] == null && pcity != null) {
@@ -205,16 +210,27 @@ function update_city_position(ptile) {
       scene.add(new_city);
     }
 
-    var text = create_city_label(pcity);
-    text.translateOnAxis(new THREE.Vector3(1,0,0).normalize(), pos['x'] + 5);
-    text.translateOnAxis(new THREE.Vector3(0,1,0).normalize(), height + 40);
-    text.translateOnAxis(new THREE.Vector3(0,0,1).normalize(), pos['y'] - 5);
-    text.rotation.y = Math.PI / 4;
-    if (scene != null) scene.add(text);
+    var city_label = create_city_label(pcity);
+    city_label_positions[ptile['index']] = city_label;
+    city_label.translateOnAxis(new THREE.Vector3(1,0,0).normalize(), pos['x'] + 5);
+    city_label.translateOnAxis(new THREE.Vector3(0,1,0).normalize(), height + 40);
+    city_label.translateOnAxis(new THREE.Vector3(0,0,1).normalize(), pos['y'] - 5);
+    city_label.rotation.y = Math.PI / 4;
+    if (scene != null) scene.add(city_label);
   }
 
   if (city_positions[ptile['index']] != null && pcity != null) {
-    // Update of visible city. TODO.
+    // Update of visible city.
+    var pos = map_to_scene_coords(ptile['x'], ptile['y']);
+    if (scene != null) scene.remove(city_label_positions[ptile['index']]);
+    delete city_label_positions[ptile['index']];
+    var city_label = create_city_label(pcity);
+    city_label_positions[ptile['index']] = city_label;
+    city_label.translateOnAxis(new THREE.Vector3(1,0,0).normalize(), pos['x'] + 5);
+    city_label.translateOnAxis(new THREE.Vector3(0,1,0).normalize(), height + 40);
+    city_label.translateOnAxis(new THREE.Vector3(0,0,1).normalize(), pos['y'] - 5);
+    city_label.rotation.y = Math.PI / 4;
+    if (scene != null) scene.add(city_label);
 
   }
 
@@ -256,20 +272,56 @@ function update_tile_extras(ptile) {
     }
   }
 
-  /* TODO: This is a temporary road solution. */
-  if (tile_extra_positions[ROAD_ROAD + "." + ptile['index']] == null && tile_has_extra(ptile, ROAD_ROAD)) {
-    var road = webgl_get_model("Road");
-    if (road == null) return;
-    tile_extra_positions[ROAD_ROAD + "." + ptile['index']] = road;
-
+  if (scene != null && road_positions[ptile['index']] == null && tile_has_extra(ptile, ROAD_ROAD)) {
+    var road_added = false;
     var pos = map_to_scene_coords(ptile['x'], ptile['y']);
-    road.translateOnAxis(new THREE.Vector3(1,0,0).normalize(), pos['x']);
-    road.translateOnAxis(new THREE.Vector3(0,1,0).normalize(), height + 3);
-    road.translateOnAxis(new THREE.Vector3(0,0,1).normalize(), pos['y']);
+    // 1. iterate over adjacent tiles, see if they have road.
+    for (var dir = 0; dir < 8; dir++) {
+      var checktile = mapstep(ptile, dir);
+      if (checktile != null && tile_has_extra(checktile, ROAD_ROAD)) {
+      // 2. if road on this tile and adjacent tile, then add rectangle as road between this tile and adjacent tile.
+        road_added = true;
+        var road_width = 4 + Math.random();
+        var dest = map_to_scene_coords(checktile['x'], checktile['y']);
+        var roadGeometry = new THREE.BufferGeometry();
+        var vertices = new Float32Array( [
+        	 0.0, 0.0,  0.0,
+        	 dest['x'] - pos['x'], (checktile['height'] - ptile['height']) * 100 ,  dest['y'] - pos['y'],
+        	 dest['x'] - pos['x'], (checktile['height'] - ptile['height']) * 100,  dest['y'] - pos['y'] + road_width,
 
-    if (scene != null && road != null) {
-      scene.add(road);
+        	 dest['x'] - pos['x'], (checktile['height'] - ptile['height']) * 100,  dest['y'] - pos['y'] + road_width,
+        	 0.0, 0.0,  road_width,
+        	 0.0, 0.0,  0.0
+        ] );
+        roadGeometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) );
+        var roadMaterial = new THREE.MeshBasicMaterial( { color: 0x171108, side:THREE.DoubleSide} );
+        var road = new THREE.Mesh( roadGeometry, roadMaterial );
+        road.translateOnAxis(new THREE.Vector3(1,0,0).normalize(), pos['x']);
+        road.translateOnAxis(new THREE.Vector3(0,1,0).normalize(), height + 4);
+        road.translateOnAxis(new THREE.Vector3(0,0,1).normalize(), pos['y']);
+        console.log("adding connected road");
+        scene.add(road);
+        road_positions[ptile['index']] = road;
+      }
     }
+
+
+    // 3. if road on this tile only, then use Road model.
+    if (road_added == false) {
+      var road = webgl_get_model("Road");
+      if (road == null) return;
+      road_positions[ptile['index']] = road;
+
+      road.translateOnAxis(new THREE.Vector3(1,0,0).normalize(), pos['x']);
+      road.translateOnAxis(new THREE.Vector3(0,1,0).normalize(), height + 4);
+      road.translateOnAxis(new THREE.Vector3(0,0,1).normalize(), pos['y']);
+      if (scene != null && road != null) {
+        console.log("adding single road");
+        scene.add(road);
+      }
+    }
+
+    // 4. update road_positions
   }
 
   if (tile_extra_positions[EXTRA_HUT + "." + ptile['index']] == null && tile_has_extra(ptile, EXTRA_HUT)) {
