@@ -363,6 +363,7 @@ function show_city_dialog(pcity)
     $("#city_pollution").html(pcity['pollution']);
     $("#city_steal").html(pcity['steal']);
     $("#city_culture").html(pcity['culture']);
+    $("#city_airlift").html(pcity['airlift']);
   }
 
   /* Handle citizens and specialists */
