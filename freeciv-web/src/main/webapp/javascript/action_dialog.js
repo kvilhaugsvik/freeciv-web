@@ -17,12 +17,17 @@
 
 ***********************************************************************/
 
-
-/* All generalized actions. */
+/**
+ All generalized actions. '
+ */
 var actions = {};
+
+/**
+  * Attack without action selection?
+  */
 var auto_attack = false;
 
-/**************************************************************************
+/**********************************************************************//**
   Returns true iff the given action probability belongs to an action that
   may be possible.
 **************************************************************************/
@@ -31,7 +36,7 @@ function action_prob_possible(aprob)
   return 0 < aprob['max'] || action_prob_not_impl(aprob);
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Returns TRUE iff the given action probability represents that support
   for finding this action probability currently is missing from Freeciv.
 **************************************************************************/
@@ -41,7 +46,7 @@ function action_prob_not_impl(probability)
          && probability['max'] == 0;
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Returns true unless a situation were a regular move always would be
   impossible is recognized.
 **************************************************************************/
@@ -93,7 +98,7 @@ function can_actor_unit_move(actor_unit, target_tile)
   return true;
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Encode a building ID for transfer in the sub_tgt_id field of
   packet_unit_do_action for targeted sabotage city.
 **************************************************************************/
@@ -104,17 +109,17 @@ function encode_building_id(building_id)
   return building_id + 1;
 }
 
-/***************************************************************************
+/**********************************************************************//**
   Returns a part of an action probability in a user readable format.
-***************************************************************************/
+**************************************************************************/
 function format_act_prob_part(prob)
 {
   return (prob / 2) + "%";
 }
 
-/****************************************************************************
+/**********************************************************************//**
   Format the probability that an action will be a success.
-****************************************************************************/
+**************************************************************************/
 function format_action_probability(probability)
 {
   if (probability['min'] == probability['max']) {
@@ -130,7 +135,7 @@ function format_action_probability(probability)
   }
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Format the label of an action selection button.
 **************************************************************************/
 function format_action_label(action_id, action_probabilities)
@@ -139,7 +144,7 @@ function format_action_label(action_id, action_probabilities)
       format_action_probability(action_probabilities[action_id]));
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Format the tooltip of an action selection button.
 **************************************************************************/
 function format_action_tooltip(act_id, act_probs)
@@ -168,7 +173,7 @@ function format_action_tooltip(act_id, act_probs)
   return out;
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Returns the function to run when an action is selected.
 **************************************************************************/
 function act_sel_click_function(parent_id,
@@ -232,7 +237,7 @@ function act_sel_click_function(parent_id,
   }
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Create a button that selects an action.
 
   Needed because of JavaScript's scoping rules.
@@ -258,9 +263,9 @@ function create_act_sel_button(parent_id,
   return button;
 }
 
-/****************************************************************************
+/**********************************************************************//**
   Ask the player to select an action.
-****************************************************************************/
+**************************************************************************/
 function popup_action_selection(actor_unit, action_probabilities,
                                 target_tile, target_extra,
                                 target_unit, target_city)
@@ -455,7 +460,7 @@ function popup_action_selection(actor_unit, action_probabilities,
   $(id).dialog('open');
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Show the player the price of bribing the unit and, if bribing is
   possible, allow him to order it done.
 **************************************************************************/
@@ -506,7 +511,7 @@ function popup_bribe_dialog(actor_unit, target_unit, cost, act_id)
 
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Show the player the price of inviting the city and, if inciting is
   possible, allow him to order it done.
 **************************************************************************/
@@ -562,7 +567,7 @@ function popup_incite_dialog(actor_unit, target_city, cost, act_id)
   $(id).dialog('open');
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Show the player the price of upgrading the unit and, if upgrading is
   affordable, allow him to order it done.
 **************************************************************************/
@@ -612,7 +617,7 @@ function popup_unit_upgrade_dlg(actor_unit, target_city, cost, act_id)
   $(id).dialog('open');
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Create a button that steals a tech.
 
   Needed because of JavaScript's scoping rules.
@@ -633,7 +638,7 @@ function create_steal_tech_button(parent_id, tech,
   return button;
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Select what tech to steal when doing targeted tech theft.
 **************************************************************************/
 function popup_steal_tech_selection_dialog(actor_unit, target_city, 
@@ -716,7 +721,7 @@ function popup_steal_tech_selection_dialog(actor_unit, target_city,
   $("#" + id).dialog('open');
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Create a button that orders a spy to try to sabotage an improvement.
 
   Needed because of JavaScript's scoping rules.
@@ -735,7 +740,7 @@ function create_sabotage_impr_button(improvement, parent_id,
   };
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Select what improvement to sabotage when doing targeted sabotage city.
 **************************************************************************/
 function popup_sabotage_dialog(actor_unit, target_city, city_imprs, act_id)
@@ -783,7 +788,7 @@ function popup_sabotage_dialog(actor_unit, target_city, city_imprs, act_id)
   $("#" + id).dialog('open');
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Create a button that selects a target unit.
 
   Needed because of JavaScript's scoping rules.
@@ -826,7 +831,7 @@ function create_select_tgt_unit_button(parent_id, actor_unit_id,
   return button;
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Create a dialog where a unit select what other unit to act on.
 **************************************************************************/
 function select_tgt_unit(actor_unit, target_tile, potential_tgt_units)
@@ -864,7 +869,7 @@ function select_tgt_unit(actor_unit, target_tile, potential_tgt_units)
   $(id).dialog('open');
 }
 
-/**************************************************************************
+/**********************************************************************//**
   List potential extra targets at target_tile
 **************************************************************************/
 function list_potential_target_extras(act_unit, target_tile)
@@ -901,7 +906,7 @@ function list_potential_target_extras(act_unit, target_tile)
   return potential_targets;
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Create a button that selects a target extra.
 
   Needed because of JavaScript's scoping rules.
@@ -950,7 +955,7 @@ function create_select_tgt_extra_button(parent_id, actor_unit_id,
   return button;
 }
 
-/**************************************************************************
+/**********************************************************************//**
   Create a dialog where a unit select what other unit to act on.
 **************************************************************************/
 function select_tgt_extra(actor_unit, target_unit,
